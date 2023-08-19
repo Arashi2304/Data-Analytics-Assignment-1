@@ -109,11 +109,18 @@ def preprocess_data(data: Union[pd.DataFrame, np.ndarray]) -> Union[pd.DataFrame
         pd.DataFrame, np.ndarray: Datastructure containing the cleaned data.
     """
     sub_df = data[['Date', 'Innings', 'Over', 'Wickets.in.Hand','Runs.Remaining']]
-    sub_df['Date'] = pd.to_datetime(sub_df['Date'], format='%d/%m/%Y')
+    for index, row in sub_df.iterrows():
+        if '-' in row['Date']:
+            date_parts = row['Date'].split('-')
+            date_str = date_parts[0] 
+        else:
+            date_str = row['Date'] 
+        sub_df.at[index, 'Date'] = date_str
+    sub_df['Date'] = pd.to_datetime(sub_df['Date'], errors='coerce').dt.strftime('%d-%m-%Y')
     sub_df = sub_df.dropna()
     data = sub_df[sub_df['Innings'] == 1]
 
-    return None
+    return data
 
 #DONE
 def loss_function(parameters, args):
