@@ -61,6 +61,7 @@ class DLModel:
         mse = np.mean((Y_pred - Y)**2)
         return mse
     
+    #DONE
     def save(self, path):
         """Save the model to the given path.
 
@@ -70,6 +71,7 @@ class DLModel:
         with open(path, 'wb') as f:
             pickle.dump((self.L, self.Z0), f)
     
+    #DONE
     def load(self, path):
         """Load the model from the given path.
 
@@ -189,7 +191,7 @@ def print_model_params(model: DLModel) -> List[float]:
     params.append(model.L)
     return params
 
-
+#DONE
 def calculate_loss(model: DLModel, data: Union[pd.DataFrame, np.ndarray]) -> float:
     '''
     Calculates the normalised squared error loss for the given model and data
@@ -201,8 +203,15 @@ def calculate_loss(model: DLModel, data: Union[pd.DataFrame, np.ndarray]) -> flo
     Returns:
         float: Normalised squared error loss for the given model and data
     '''
-    
-    return 0.0
+    remaining_runs = data['Runs.Remaining'].values
+    overs_left = 50 - data['Over'].values
+    wickets_in_hand = data['Wickets.in.Hand'].values
+    parameters = []
+    for i in range(len(model.Z0)):
+        parameters.append(model.Z0[i])
+    parameters.append(model.L)
+    loss = loss_function(parameters, [remaining_runs, overs_left, wickets_in_hand, model])
+    return loss
 
 
 def main(args):
