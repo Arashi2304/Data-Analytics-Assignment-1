@@ -106,8 +106,8 @@ def preprocess_data(data: Union[pd.DataFrame, np.ndarray]) -> Union[pd.DataFrame
     Returns:
         pd.DataFrame, np.ndarray: Datastructure containing the cleaned data.
     """
-    sub_df = data[['MatchDate', 'Innings', 'Over', 'Wickets.in.Hand','Runs.Remaining']]
-    sub_df['MatchDate'] = pd.to_datetime(sub_df['MatchDate'], format='%d/%m/%Y')
+    sub_df = data[['Date', 'Innings', 'Over', 'Wickets.in.Hand','Runs.Remaining']]
+    sub_df['Date'] = pd.to_datetime(sub_df['Date'], format='%d/%m/%Y')
     sub_df = sub_df.dropna()
     data = sub_df[sub_df['Innings'] == 1]
 
