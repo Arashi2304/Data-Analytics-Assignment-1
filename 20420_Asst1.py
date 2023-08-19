@@ -20,9 +20,10 @@ class DLModel:
 
     def __init__(self):
         """Initialize the model."""
-        self.Z0 = [None] * 10
-        self.L = None
+        self.Z0 = [10, 30, 40, 60, 90, 125, 150, 170, 190, 200]
+        self.L = 10
     
+    #DONE
     def get_predictions(self, X, Z_0=None, w=10, L=None) -> np.ndarray:
         """Get the predictions for the given X values.
 
@@ -38,8 +39,9 @@ class DLModel:
         Returns:
             np.array: Predicted score possible
         """
-        pass
+        return Z_0 * (1 - np.exp(-L * X / Z_0))
 
+    #DONE
     def calculate_loss(self, Params, X, Y, w=10) -> float:
         """ Calculate the loss for the given parameters and datapoints.
         Args:
@@ -53,7 +55,11 @@ class DLModel:
             float: Mean Squared Error Loss for the model parameters 
                    over the given datapoints.
         """
-        pass
+        Z_0 = Params[w-1]
+        L = Params[-1]
+        Y_pred = self.get_predictions(X, Z_0, w, L)
+        mse = np.mean((Y_pred - Y)**2)
+        return mse
     
     def save(self, path):
         """Save the model to the given path.
@@ -73,7 +79,7 @@ class DLModel:
         with open(path, 'rb') as f:
             (self.L, self.Z0) = pickle.load(f)
 
-
+#DONE
 def get_data(data_path) -> Union[pd.DataFrame, np.ndarray]:
     """
     Loads the data from the given path and returns a pandas dataframe.
@@ -84,9 +90,9 @@ def get_data(data_path) -> Union[pd.DataFrame, np.ndarray]:
     Returns:
         pd.DataFrame, np.ndarray: Data Structure containing the loaded data
     """
-    pass
+    return pd.read_csv(data_path)
 
-
+#DONE
 def preprocess_data(data: Union[pd.DataFrame, np.ndarray]) -> Union[pd.DataFrame, np.ndarray]:
     """Preprocesses the dataframe by
     (i)   removing the unnecessary columns,
@@ -100,10 +106,26 @@ def preprocess_data(data: Union[pd.DataFrame, np.ndarray]) -> Union[pd.DataFrame
     Returns:
         pd.DataFrame, np.ndarray: Datastructure containing the cleaned data.
     """
+    sub_df = data[['MatchDate', 'Innings', 'Over', 'Wickets.in.Hand','Runs.Remaining']]
+    sub_df['MatchDate'] = pd.to_datetime(sub_df['MatchDate'], format='%d/%m/%Y')
+    sub_df = sub_df.dropna()
+    data = sub_df[sub_df['Innings'] == 1]
 
     return None
 
+#DONE
+def loss_function(parameters, args):
+    SE = 0
+    remaining_runs = args[0]
+    overs_left = args[1]
+    wickets_in_hand = args[2]
+    model = args[3]
+    
+    for i in range(len(wickets_in_hand)):
+        SE += model.calculate_loss(parameters, overs_left[i], remaining_runs[i], wickets_in_hand[i])
+    return SE
 
+#DONE?
 def train_model(data: Union[pd.DataFrame, np.ndarray], model: DLModel) -> DLModel:
     """Trains the model
 
@@ -111,10 +133,21 @@ def train_model(data: Union[pd.DataFrame, np.ndarray], model: DLModel) -> DLMode
         data (pd.DataFrame, np.ndarray): Datastructure containg the cleaned data
         model (DLModel): Model to be trained
     """
-    
+    remaining_runs = data['Runs.Remaining'].values
+    overs_left = 50 - data['Over'].values
+    wickets_in_hand = data['Wickets.in.Hand'].values
+    parameters = []
+    for i in range(len(model.Z0)):
+        parameters.append(model.Z0[i])
+    parameters.append(model.L)
+    result = sp.optimize.minimize(loss_function, parameters, args=[remaining_runs, overs_left, wickets_in_hand, model], method='trust-constr')
+    result = result['x']
+    for i in range(len(model.Z0)):
+        model.Z0[i] = result[i]
+    model.L = result[-1]                
     return model
 
-
+#DONE
 def plot(model: DLModel, plot_path: str) -> None:
     """ Plots the model predictions against the number of overs
         remaining according to wickets in hand.
@@ -123,9 +156,22 @@ def plot(model: DLModel, plot_path: str) -> None:
         model (DLModel): Trained model
         plot_path (str): Path to save the plot
     """
-    pass
+    plt.figure()
+    x = np.linspace(1,50,100)
+    for i in range(len(model.Z0)):
+        y = model.get_predictions(x, model.Z0[i], i+1, model.L)
+        plt.plot(x,y,label='Wickets in hand:' + str(i+1))
+        plt.title('Run Production function')
+    plt.xlim(0,50)
+    plt.xlabel('Overs left')
+    plt.ylabel('Average Runs Obtainable')
+    plt.legend()
+    plt.savefig(plot_path)
+    plt.close('all')
+    
+    return None
 
-
+#DONE
 def print_model_params(model: DLModel) -> List[float]:
     '''
     Prints the 11 (Z_0(1), ..., Z_0(10), L) model parameters
@@ -137,8 +183,11 @@ def print_model_params(model: DLModel) -> List[float]:
         array: 11 model parameters (Z_0(1), ..., Z_0(10), L)
 
     '''
-    
-    return []
+    params = []
+    for i in range(10):
+        params.append(model.Z0[i])
+    params.append(model.L)
+    return params
 
 
 def calculate_loss(model: DLModel, data: Union[pd.DataFrame, np.ndarray]) -> float:
