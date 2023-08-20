@@ -178,6 +178,7 @@ def plot(model: DLModel, plot_path: str) -> None:
     plt.ylabel('Average Runs Obtainable')
     plt.legend()
     plt.savefig(plot_path)
+    plt.show()
     plt.close('all')
     
     return None
