@@ -150,10 +150,12 @@ def train_model(data: Union[pd.DataFrame, np.ndarray], model: DLModel) -> DLMode
         parameters.append(model.Z0[i])
     parameters.append(model.L)
     result = sp.optimize.minimize(loss_function, parameters, args=[remaining_runs, overs_left, wickets_in_hand, model], method='trust-constr')
+    #print(result['fun'])
     result = result['x']
     for i in range(len(model.Z0)):
         model.Z0[i] = result[i]
-    model.L = result[-1]                
+    model.L = result[-1]
+    #print(model.Z0,model.L)                
     return model
 
 #DONE
@@ -169,7 +171,7 @@ def plot(model: DLModel, plot_path: str) -> None:
     x = np.linspace(1,50,100)
     for i in range(len(model.Z0)):
         y = model.get_predictions(x, model.Z0[i], i+1, model.L)
-        plt.plot(x,y,label='Wickets in hand:' + str(i+1))
+        plt.plot(x,y,label=f'Z[{i+1}]: {model.Z0[i]}')
         plt.title('Run Production function')
     plt.xlim(0,50)
     plt.xlabel('Overs left')
@@ -196,7 +198,8 @@ def print_model_params(model: DLModel) -> List[float]:
     for i in range(10):
         params.append(model.Z0[i])
     params.append(model.L)
-    return params
+    print(params)
+    return None
 
 #DONE
 def calculate_loss(model: DLModel, data: Union[pd.DataFrame, np.ndarray]) -> float:
@@ -218,7 +221,8 @@ def calculate_loss(model: DLModel, data: Union[pd.DataFrame, np.ndarray]) -> flo
         parameters.append(model.Z0[i])
     parameters.append(model.L)
     loss = loss_function(parameters, [remaining_runs, overs_left, wickets_in_hand, model])
-    return loss
+    print(loss)
+    return None
 
 
 def main(args):
@@ -242,6 +246,7 @@ def main(args):
 
     # Calculate the normalised squared error
     calculate_loss(model, data)
+
 
 
 if __name__ == '__main__':
