@@ -199,7 +199,7 @@ def print_model_params(model: DLModel) -> List[float]:
     for i in range(10):
         params.append(model.Z0[i])
     params.append(model.L)
-    print(params)
+    print(f'The parameters are: {params}')
     return None
 
 #DONE
@@ -222,7 +222,7 @@ def calculate_loss(model: DLModel, data: Union[pd.DataFrame, np.ndarray]) -> flo
         parameters.append(model.Z0[i])
     parameters.append(model.L)
     loss = loss_function(parameters, [remaining_runs, overs_left, wickets_in_hand, model])
-    print(loss)
+    print(f'The total normalised square error loss is: {loss}')
     return None
 
 
